@@ -1,0 +1,43 @@
+{
+    "logs": [
+        {
+            "outputFile": "org.qtproject.example.Practica2-mergeDebugResources-9:/values-zh-rTW/values-zh-rTW.xml",
+            "map": [
+                {
+                    "source": "/home/aaron89/Qt/6.12.0/android_arm64_v8a/src/android/java/res/values-zh-rTW/strings.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "102",
+                        "endColumns": "97",
+                        "endOffsets": "195"
+                    },
+                    "to": {
+                        "startLines": "9",
+                        "startColumns": "4",
+                        "startOffsets": "763",
+                        "endColumns": "97",
+                        "endOffsets": "856"
+                    }
+                },
+                {
+                    "source": "/home/aaron89/.gradle/caches/9.5.1/transforms/092804f1fc6a26866c856623c89f7cd8/transformed/core-1.17.0/res/values-zh-rTW/values-zh-rTW.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,246,340,434,527,620,716",
+                        "endColumns": "91,98,93,93,92,92,95,100",
+                        "endOffsets": "142,241,335,429,522,615,711,812"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,10",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "102,194,293,387,481,574,667,861",
+                        "endColumns": "91,98,93,93,92,92,95,100",
+                        "endOffsets": "189,288,382,476,569,662,758,957"
+                    }
+                }
+            ]
+        }
+    ]
+}

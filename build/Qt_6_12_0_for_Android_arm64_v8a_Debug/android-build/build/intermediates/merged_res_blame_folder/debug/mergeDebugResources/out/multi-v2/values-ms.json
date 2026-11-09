@@ -1,0 +1,43 @@
+{
+    "logs": [
+        {
+            "outputFile": "org.qtproject.example.Practica2-mergeDebugResources-9:/values-ms/values-ms.xml",
+            "map": [
+                {
+                    "source": "/home/aaron89/.gradle/caches/9.5.1/transforms/092804f1fc6a26866c856623c89f7cd8/transformed/core-1.17.0/res/values-ms/values-ms.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,349,459,565,683,798",
+                        "endColumns": "94,101,96,109,105,117,114,100",
+                        "endOffsets": "145,247,344,454,560,678,793,894"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,10",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "102,197,299,396,506,612,730,981",
+                        "endColumns": "94,101,96,109,105,117,114,100",
+                        "endOffsets": "192,294,391,501,607,725,840,1077"
+                    }
+                },
+                {
+                    "source": "/home/aaron89/Qt/6.12.0/android_arm64_v8a/src/android/java/res/values-ms/strings.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "102",
+                        "endColumns": "135",
+                        "endOffsets": "233"
+                    },
+                    "to": {
+                        "startLines": "9",
+                        "startColumns": "4",
+                        "startOffsets": "845",
+                        "endColumns": "135",
+                        "endOffsets": "976"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,43 @@
+{
+    "logs": [
+        {
+            "outputFile": "org.qtproject.example.Practica2-mergeDebugResources-9:/values-el/values-el.xml",
+            "map": [
+                {
+                    "source": "/home/aaron89/Qt/6.12.0/android_arm64_v8a/src/android/java/res/values-el/strings.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "102",
+                        "endColumns": "147",
+                        "endOffsets": "245"
+                    },
+                    "to": {
+                        "startLines": "9",
+                        "startColumns": "4",
+                        "startOffsets": "837",
+                        "endColumns": "147",
+                        "endOffsets": "980"
+                    }
+                },
+                {
+                    "source": "/home/aaron89/.gradle/caches/9.5.1/transforms/092804f1fc6a26866c856623c89f7cd8/transformed/core-1.17.0/res/values-el/values-el.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,256,356,459,567,673,790",
+                        "endColumns": "97,102,99,102,107,105,116,100",
+                        "endOffsets": "148,251,351,454,562,668,785,886"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,10",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "102,200,303,403,506,614,720,985",
+                        "endColumns": "97,102,99,102,107,105,116,100",
+                        "endOffsets": "195,298,398,501,609,715,832,1081"
+                    }
+                }
+            ]
+        }
+    ]
+}
