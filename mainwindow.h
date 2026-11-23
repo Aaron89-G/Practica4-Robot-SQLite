@@ -11,6 +11,15 @@
 #include <QtCharts>
 #include <QElapsedTimer>
 #include <QTime>
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLabel>
+#include <QCheckBox>
+#include <QTableWidget>
+#include <QHeaderView>
+#include <QSpinBox>
+#include <QLineEdit>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -48,6 +57,8 @@ private slots:
     void on_btnNoNo_clicked();
     void on_btnDireccionales_clicked();
 
+    void guardarTemperatura(double celsius);
+
 private:
     Ui::MainWindow *ui;
     QWebSocket socket;
@@ -65,5 +76,17 @@ private:
     QValueAxis *ejeTiempo = new QValueAxis();
     QValueAxis *ejeDistancia = new QValueAxis();
     QElapsedTimer reloj;
+
+    QVBoxLayout *m_capaTemp;
+    QLabel *m_temperatura;
+
+    QCheckBox *m_chkAutoTemp;
+    QTimer *m_timerAutoTemp;
+
+    QTableWidget *m_tabla;
+    QLabel *m_total;
+
+    QSpinBox *m_id;
+    QLineEdit *m_nota;
 };
 #endif // MAINWINDOW_H
