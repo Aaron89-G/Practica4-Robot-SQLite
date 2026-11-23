@@ -20,6 +20,7 @@
 #include <QHeaderView>
 #include <QSpinBox>
 #include <QLineEdit>
+#include <QComboBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -58,6 +59,8 @@ private slots:
     void on_btnDireccionales_clicked();
 
     void guardarTemperatura(double celsius);
+    void actualizarFechas();
+    void cargarHistorial();
 
 private:
     Ui::MainWindow *ui;
@@ -88,5 +91,14 @@ private:
 
     QSpinBox *m_id;
     QLineEdit *m_nota;
+
+    // ---- EXTRA P4: FILTRO POR FECHA Y GRÁFICA HISTÓRICA SQLITE ----
+    QComboBox *m_comboFecha = nullptr;
+    QLabel *m_resumenFecha = nullptr;
+    QChart *m_graficaTemp = nullptr;
+    QLineSeries *m_serieTemp = nullptr;
+    QValueAxis *m_ejeIdTemp = nullptr;
+    QValueAxis *m_ejeGradosTemp = nullptr;
+    QChartView *m_vistaGraficaTemp = nullptr;
 };
 #endif // MAINWINDOW_H

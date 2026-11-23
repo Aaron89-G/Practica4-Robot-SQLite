@@ -114,16 +114,55 @@ MainWindow::MainWindow(QWidget *parent)
     m_capaTemp->addLayout(capaControles);
 
     // ==========================================
-    // PRÁCTICA 4 - E4: TABLA DE HISTORIAL
+    // PRÁCTICA 4 - E7 (EXTRA): FILTRO POR FECHA Y RESUMEN SQL
+    // ==========================================
+    QHBoxLayout *capaFiltro = new QHBoxLayout();
+    QLabel *lblSesion = new QLabel("Sesión (fecha):", this);
+    m_comboFecha = new QComboBox(this);
+    m_comboFecha->addItem("Todas");
+    m_resumenFecha = new QLabel("Sin datos", this);
+
+    capaFiltro->addWidget(lblSesion);
+    capaFiltro->addWidget(m_comboFecha);
+    capaFiltro->addWidget(m_resumenFecha, 1);
+    m_capaTemp->addLayout(capaFiltro);
+
+    // ==========================================
+    // PRÁCTICA 4 - E4 y E7 (EXTRA): TABLA + GRÁFICA HISTÓRICA SQLITE
     // ==========================================
     m_tabla = new QTableWidget(0, 4, this);
     m_tabla->setHorizontalHeaderLabels({"ID", "Fecha y Hora", "°C", "Nota"});
     m_tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_tabla->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    m_graficaTemp = new QChart();
+    m_serieTemp = new QLineSeries();
+    m_serieTemp->setPointsVisible(true);
+    m_ejeIdTemp = new QValueAxis();
+    m_ejeGradosTemp = new QValueAxis();
+
+    m_graficaTemp->addSeries(m_serieTemp);
+    m_graficaTemp->legend()->hide();
+    m_graficaTemp->setTitle("Historial de Temperatura (SQLite)");
+    m_ejeIdTemp->setTitleText("ID medición");
+    m_ejeIdTemp->setLabelFormat("%d");
+    m_ejeGradosTemp->setTitleText("Temperatura (°C)");
+    m_graficaTemp->addAxis(m_ejeIdTemp, Qt::AlignBottom);
+    m_graficaTemp->addAxis(m_ejeGradosTemp, Qt::AlignLeft);
+    m_serieTemp->attachAxis(m_ejeIdTemp);
+    m_serieTemp->attachAxis(m_ejeGradosTemp);
+
+    m_vistaGraficaTemp = new QChartView(m_graficaTemp, this);
+    m_vistaGraficaTemp->setRenderHint(QPainter::Antialiasing);
+
+    QHBoxLayout *capaDatos = new QHBoxLayout();
+    capaDatos->addWidget(m_tabla, 1);
+    capaDatos->addWidget(m_vistaGraficaTemp, 1);
+    m_capaTemp->addLayout(capaDatos, 1);
+
     QPushButton *btnCargarHistorial = new QPushButton("Cargar historial", this);
     m_total = new QLabel("Mediciones guardadas: 0", this);
 
-    m_capaTemp->addWidget(m_tabla);
     m_capaTemp->addWidget(btnCargarHistorial);
     m_capaTemp->addWidget(m_total);
 
@@ -166,28 +205,13 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
 
-    // Conectar botón "Cargar Historial" (E4)
-    connect(btnCargarHistorial, &QPushButton::clicked, this, [this]() {
-        QSqlQuery consulta("SELECT id, fecha_hora, temperatura, nota FROM mediciones ORDER BY id DESC LIMIT 50");
-        if (!consulta.isActive()) {
-            registrarEvento("SELECT falló: " + consulta.lastError().text());
-            return;
-        }
-        m_tabla->setRowCount(0);
-        while (consulta.next()) {
-            const int fila = m_tabla->rowCount();
-            m_tabla->insertRow(fila);
-            m_tabla->setItem(fila, 0, new QTableWidgetItem(consulta.value(0).toString()));
-            m_tabla->setItem(fila, 1, new QTableWidgetItem(consulta.value(1).toString()));
-            m_tabla->setItem(fila, 2, new QTableWidgetItem(QString::number(consulta.value(2).toDouble(), 'f', 1)));
-            m_tabla->setItem(fila, 3, new QTableWidgetItem(consulta.value(3).toString()));
-        }
-        m_tabla->resizeColumnsToContents();
+    // Conectar cambio de fecha en filtro (E7)
+    connect(m_comboFecha, &QComboBox::currentTextChanged, this, &MainWindow::cargarHistorial);
 
-        QSqlQuery total("SELECT COUNT(*) FROM mediciones");
-        if (total.next()) {
-            m_total->setText("Mediciones guardadas: " + total.value(0).toString());
-        }
+    // Conectar botón "Cargar Historial" (E4 + E7)
+    connect(btnCargarHistorial, &QPushButton::clicked, this, [this]() {
+        actualizarFechas();
+        cargarHistorial();
     });
 
     // Conectar el click en la tabla para copiar el ID (E5)
@@ -196,7 +220,7 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
     // Conectar el botón de Guardar nota (E5)
-    connect(btnGuardarNota, &QPushButton::clicked, this, [this, btnCargarHistorial]() {
+    connect(btnGuardarNota, &QPushButton::clicked, this, [this]() {
         if (m_id->value() == 0) {
             registrarEvento("Primero toca una fila");
             return;
@@ -217,8 +241,7 @@ MainWindow::MainWindow(QWidget *parent)
         m_nota->clear();
         m_id->setValue(0);
 
-        // Recargar la tabla (E4)
-        QMetaObject::invokeMethod(btnCargarHistorial, "clicked");
+        cargarHistorial();
     });
 
     // ==========================================
@@ -249,8 +272,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     registrarEvento((yaExistia ? "Base encontrada: " : "Base nueva creada: ") + ruta);
 
-    // Carga inicial de la tabla al abrir la app
-    emit btnCargarHistorial->clicked();
+    // Carga inicial de fechas, tabla, resumen y gráfica al abrir la app
+    actualizarFechas();
+    cargarHistorial();
 }
 
 MainWindow::~MainWindow()
@@ -351,7 +375,7 @@ void MainWindow::alRecibirMensaje(const QString &mensaje){
 }
 
 // ==========================================
-// PRÁCTICA 4 - E3 y E4: FUNCIÓN GUARDAR TEMPERATURA
+// PRÁCTICA 4 - E3, E4 y E7: GUARDAR, FILTRAR Y GRAFICAR
 // ==========================================
 static const char *FUENTE = "simulada";
 
@@ -372,19 +396,129 @@ void MainWindow::guardarTemperatura(double celsius)
 
     registrarEvento(QString("Guardada %1 °C con id %2").arg(c1, 0, 'f', 1).arg(consulta.lastInsertId().toString()));
 
-    // Recargar la tabla (E4)
-    QSqlQuery selectQuery("SELECT id, fecha_hora, temperatura, nota FROM mediciones ORDER BY id DESC LIMIT 50");
-    if (selectQuery.isActive() && m_tabla) {
-        m_tabla->setRowCount(0);
-        while (selectQuery.next()) {
-            const int fila = m_tabla->rowCount();
-            m_tabla->insertRow(fila);
-            m_tabla->setItem(fila, 0, new QTableWidgetItem(selectQuery.value(0).toString()));
-            m_tabla->setItem(fila, 1, new QTableWidgetItem(selectQuery.value(1).toString()));
-            m_tabla->setItem(fila, 2, new QTableWidgetItem(QString::number(selectQuery.value(2).toDouble(), 'f', 1)));
-            m_tabla->setItem(fila, 3, new QTableWidgetItem(selectQuery.value(3).toString()));
+    actualizarFechas();
+    cargarHistorial();
+}
+
+void MainWindow::actualizarFechas()
+{
+    if (!m_comboFecha) return;
+
+    const QString seleccionActual = m_comboFecha->currentText();
+    m_comboFecha->blockSignals(true);
+    m_comboFecha->clear();
+    m_comboFecha->addItem("Todas");
+
+    QSqlQuery q("SELECT DISTINCT substr(fecha_hora, 1, 10) FROM mediciones ORDER BY 1 DESC");
+    while (q.next()) {
+        const QString fecha = q.value(0).toString();
+        if (!fecha.isEmpty()) {
+            m_comboFecha->addItem(fecha);
         }
     }
+
+    const int idx = m_comboFecha->findText(seleccionActual);
+    m_comboFecha->setCurrentIndex(idx >= 0 ? idx : 0);
+    m_comboFecha->blockSignals(false);
+}
+
+void MainWindow::cargarHistorial()
+{
+    if (!m_tabla || !m_comboFecha) return;
+
+    const QString fechaSel = m_comboFecha->currentText();
+    const bool filtrar = (!fechaSel.isEmpty() && fechaSel != "Todas");
+
+    QSqlQuery consulta;
+    if (filtrar) {
+        consulta.prepare("SELECT id, fecha_hora, temperatura, nota FROM mediciones "
+                         "WHERE fecha_hora LIKE :fecha ORDER BY id DESC");
+        consulta.bindValue(":fecha", fechaSel + "%");
+    } else {
+        consulta.prepare("SELECT id, fecha_hora, temperatura, nota FROM mediciones ORDER BY id DESC");
+    }
+
+    if (!consulta.exec()) {
+        registrarEvento("SELECT falló: " + consulta.lastError().text());
+        return;
+    }
+
+    m_tabla->setRowCount(0);
+    QList<QPointF> puntos;
+    double minTemp = 999.0;
+    double maxTemp = -999.0;
+
+    while (consulta.next()) {
+        const int id = consulta.value(0).toInt();
+        const QString fechaHora = consulta.value(1).toString();
+        const double temp = consulta.value(2).toDouble();
+        const QString nota = consulta.value(3).toString();
+
+        const int fila = m_tabla->rowCount();
+        m_tabla->insertRow(fila);
+        m_tabla->setItem(fila, 0, new QTableWidgetItem(QString::number(id)));
+        m_tabla->setItem(fila, 1, new QTableWidgetItem(fechaHora));
+        m_tabla->setItem(fila, 2, new QTableWidgetItem(QString::number(temp, 'f', 1)));
+        m_tabla->setItem(fila, 3, new QTableWidgetItem(nota));
+
+        puntos.append(QPointF(id, temp));
+        if (temp < minTemp) minTemp = temp;
+        if (temp > maxTemp) maxTemp = temp;
+    }
+    m_tabla->resizeColumnsToContents();
+
+    // Actualizar gráfica histórica en orden ascendente por ID
+    if (m_serieTemp && m_graficaTemp && m_ejeIdTemp && m_ejeGradosTemp) {
+        m_serieTemp->clear();
+        for (int i = puntos.size() - 1; i >= 0; --i) {
+            m_serieTemp->append(puntos.at(i));
+        }
+        m_graficaTemp->setTitle(filtrar
+                                    ? "Historial de Temperatura (" + fechaSel + ")"
+                                    : "Historial de Temperatura (Todas)");
+
+        if (puntos.isEmpty()) {
+            m_ejeIdTemp->setRange(0, 10);
+            m_ejeGradosTemp->setRange(20, 30);
+        } else {
+            const double minId = puntos.last().x();
+            const double maxId = puntos.first().x();
+            if (minId == maxId) {
+                m_ejeIdTemp->setRange(minId - 1, maxId + 1);
+            } else {
+                m_ejeIdTemp->setRange(minId, maxId);
+            }
+            m_ejeGradosTemp->setRange(minTemp - 1.0, maxTemp + 1.0);
+        }
+    }
+
+    // Resumen SQL de la sesión filtrada (COUNT, AVG, MIN, MAX)
+    QSqlQuery resumen;
+    if (filtrar) {
+        resumen.prepare("SELECT COUNT(*), AVG(temperatura), MIN(temperatura), MAX(temperatura) "
+                        "FROM mediciones WHERE fecha_hora LIKE :fecha");
+        resumen.bindValue(":fecha", fechaSel + "%");
+    } else {
+        resumen.prepare("SELECT COUNT(*), AVG(temperatura), MIN(temperatura), MAX(temperatura) "
+                        "FROM mediciones");
+    }
+
+    if (resumen.exec() && resumen.next() && m_resumenFecha) {
+        const int cant = resumen.value(0).toInt();
+        if (cant > 0) {
+            m_resumenFecha->setText(
+                QString("%1 filas | Prom: %2 °C | Mín: %3 °C | Máx: %4 °C")
+                    .arg(cant)
+                    .arg(resumen.value(1).toDouble(), 0, 'f', 1)
+                    .arg(resumen.value(2).toDouble(), 0, 'f', 1)
+                    .arg(resumen.value(3).toDouble(), 0, 'f', 1)
+                );
+        } else {
+            m_resumenFecha->setText("Sin mediciones en esta sesión");
+        }
+    }
+
+    // Total global de la base (E4)
     QSqlQuery total("SELECT COUNT(*) FROM mediciones");
     if (total.next() && m_total) {
         m_total->setText("Mediciones guardadas: " + total.value(0).toString());
